@@ -1,0 +1,28 @@
+CREATE TABLE fonterra_pilot (
+    `Regional_sales_manager` VARCHAR(255),
+    `Area_Sales_Manager` VARCHAR(255),
+    `Total_outlets_assigned` INT,
+    `Total_visits_in_ August` INT,
+    `Total_visits_in_September` INT,
+    `Total_visits_in_October` INT
+);
+
+INSERT INTO fonterra_pilot VALUES ('HR', 'LAKMAL HETTIARACHCHI', 575, 188, 182, 185);
+INSERT INTO fonterra_pilot VALUES ('HR', 'MOHAMMED RAUF', 429, 184, 180, 180);
+INSERT INTO fonterra_pilot VALUES ('LM', 'NALEEN WIJESIRI', 466, 181, 180, 114);
+INSERT INTO fonterra_pilot VALUES ('HP', 'PRAMUDITHA CHAMARA', 333, 182, 180, 180);
+INSERT INTO fonterra_pilot VALUES ('LM', 'JASANTHA HETTIARACHCHI', 234, 191, 198, 182);
+INSERT INTO fonterra_pilot VALUES ('LM', 'LASITH JEEWAKA', 276, 190, 181, 181);
+INSERT INTO fonterra_pilot VALUES ('LM', 'PRASAD LAKMAL', 316, 184, 180, 162);
+INSERT INTO fonterra_pilot VALUES ('HP', 'RUVIN ANURADHA', 217, 189, 192, 182);
+INSERT INTO fonterra_pilot VALUES ('HP', 'BUDDIKA SAMARATHUNGA', 257, 181, 190, 84);
+INSERT INTO fonterra_pilot VALUES ('HP', 'MILAN KODIKARA', 228, 185, 180, 183);
+INSERT INTO fonterra_pilot VALUES ('AA', 'ROSHAN COLAMBAGE', 405, 181, 180, 183);
+INSERT INTO fonterra_pilot VALUES ('HR', 'SALIYA BANDARA', 224, 206, 180, 184);
+INSERT INTO fonterra_pilot VALUES ('AA', 'KUMAR PONNAMBALAM', 421, 181, 180, 151);
+INSERT INTO fonterra_pilot VALUES ('AA', 'MIGARA BANDARANAYAKE', 256, 185, 181, 180);
+INSERT INTO fonterra_pilot VALUES ('HR', 'MOHAMED KAZAATH', 365, 182, 183, 182);
+INSERT INTO fonterra_pilot VALUES ('AA', 'MOHAMMED SHIRAZ', 261, 183, 181, 99);
+INSERT INTO fonterra_pilot VALUES ('AA', 'SAMEERA WEDEGEDERA', 191, 187, 193, 181);
+INSERT INTO fonterra_pilot VALUES ('HP', 'MUDITHA DEMEL', 453, 183, 182, 182);
+INSERT INTO fonterra_pilot VALUES ('HP', 'KAJENDRAN SHABEEKAN', 422, 0, 192, 181);
