@@ -63,6 +63,7 @@ def get_sql_chain(db):
     
     Instruction:
     -To filter 'store','outlets', always use the 'Total_outlets_assigned' column.
+    -When ask about 'target achievement rate', you need to get total visit in particular month then divide this value with 225 and get percentage value(value should be INT)
 
     For example:
     Question: How many area sales managers are there?
