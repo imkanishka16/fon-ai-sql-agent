@@ -141,14 +141,18 @@ load_dotenv()
 st.set_page_config(page_title="fontera_ai", page_icon=":speech_balloon:")
 # st.image("download.jpeg", width=200) 
 
-st.title("Fonterra Assistant!🤖")
+# st.title("Fonterra Assistant!🤖")
+st.markdown("<h1 style='text-align: center; color: white;'>Fonterra Assistant!🤖</h1>", unsafe_allow_html=True)
 
 st.session_state.db = db
 st.markdown("""
     <style>
+               
     .stApp {
         background-color: #2E5077;
+        color: white;
     }
+            
     .logo-img {
         position: fixed;
         top: 10px;
@@ -177,47 +181,6 @@ for message in st.session_state.chat_history:
         with st.chat_message("Human"):
             st.markdown(message.content)
 
-# user_query = st.chat_input("Type a message...")
-# # store_user_query(user_query, engine2)
-# if user_query is not None and user_query.strip() != "":
-#     st.session_state.chat_history.append(HumanMessage(content=user_query))
-    
-#     with st.chat_message("Human"):
-#         st.markdown(user_query)
-
-    
-#     sql_chain = get_sql_chain(db)
-#     response1 = sql_chain.invoke({
-#             "chat_history":db,
-#             "question":user_query
-#         })
-#     print("\n=================================")
-#     print("\n",response1)
-#     print("\n=================================")
-
-        
-#     # json_response = get_response_json(user_query, st.session_state.db, st.session_state.chat_history)
-#     # print(json_response)
-     
-
-#     with st.chat_message("AI"):
-#         response = get_response(user_query, st.session_state.db, st.session_state.chat_history)
-#         print("\n=================================")
-#         # st.markdown(response)
-        
-#     # st.session_state.chat_history.append(AIMessage(content=text_answer))
-#     # Ensure text_answer is not None before adding to chat history
-
-    
-#     if response:
-#         st.session_state.chat_history.append(AIMessage(content=response))
-#         with st.chat_message("AI"):
-#             st.markdown(response)
-#     else:
-#         fallback_message = "I couldn't generate a valid response. Please try again."
-#         st.session_state.chat_history.append(AIMessage(content=fallback_message))
-#         with st.chat_message("AI"):
-#             st.markdown(fallback_message)
 
 user_query = st.chat_input("Type a message...")
 if user_query is not None and user_query.strip() != "":
@@ -239,3 +202,5 @@ if user_query is not None and user_query.strip() != "":
         st.session_state.chat_history.append(AIMessage(content=fallback_message))
         with st.chat_message("assistant"):
             st.markdown(fallback_message)
+
+
