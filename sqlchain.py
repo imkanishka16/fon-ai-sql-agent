@@ -173,13 +173,45 @@ st.markdown(
 # st.logo("download.jpeg")
 # st.image("download.jpeg", width=200) 
 
+# for message in st.session_state.chat_history:
+#     if isinstance(message, AIMessage):
+#         with st.chat_message("AI"):
+#             st.markdown(message.content)
+#     elif isinstance(message, HumanMessage):
+#         with st.chat_message("Human"):
+#             st.markdown(message.content)
+
+
+# user_query = st.chat_input("Type a message...")
+# if user_query is not None and user_query.strip() != "":
+#     # Append the user's message to chat history
+#     st.session_state.chat_history.append(HumanMessage(content=user_query))
+#     with st.chat_message("user"):
+#         st.markdown(user_query)
+
+#     # Generate AI response
+#     response = get_response(user_query, st.session_state.db, st.session_state.chat_history)
+#     if response:
+#         # Append the AI response to chat history
+#         st.session_state.chat_history.append(AIMessage(content=response))
+#         with st.chat_message("assistant"):
+#             st.markdown(response)
+#     else:
+#         # Fallback response if no valid answer is generated
+#         fallback_message = "I couldn't generate a valid response. Please try again."
+#         st.session_state.chat_history.append(AIMessage(content=fallback_message))
+#         with st.chat_message("assistant"):
+#             st.markdown(fallback_message)
+
+
 for message in st.session_state.chat_history:
     if isinstance(message, AIMessage):
         with st.chat_message("AI"):
-            st.markdown(message.content)
+            st.markdown(f"<span style='color: white;'>{message.content}</span>", unsafe_allow_html=True)
     elif isinstance(message, HumanMessage):
         with st.chat_message("Human"):
-            st.markdown(message.content)
+            st.markdown(f"<span style='color: white;'>{message.content}</span>", unsafe_allow_html=True)
+
 
 
 user_query = st.chat_input("Type a message...")
@@ -187,7 +219,7 @@ if user_query is not None and user_query.strip() != "":
     # Append the user's message to chat history
     st.session_state.chat_history.append(HumanMessage(content=user_query))
     with st.chat_message("user"):
-        st.markdown(user_query)
+        st.markdown(f"<span style='color: white;'>{user_query}</span>", unsafe_allow_html=True)
 
     # Generate AI response
     response = get_response(user_query, st.session_state.db, st.session_state.chat_history)
@@ -195,12 +227,12 @@ if user_query is not None and user_query.strip() != "":
         # Append the AI response to chat history
         st.session_state.chat_history.append(AIMessage(content=response))
         with st.chat_message("assistant"):
-            st.markdown(response)
+            st.markdown(f"<span style='color: white;'>{response}</span>", unsafe_allow_html=True)
     else:
         # Fallback response if no valid answer is generated
         fallback_message = "I couldn't generate a valid response. Please try again."
         st.session_state.chat_history.append(AIMessage(content=fallback_message))
         with st.chat_message("assistant"):
-            st.markdown(fallback_message)
+            st.markdown(f"<span style='color: white;'>{fallback_message}</span>", unsafe_allow_html=True)
 
 
