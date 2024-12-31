@@ -151,6 +151,9 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 myenv/
+Fonterra_Pilot_Final.xlsx
+Fonterra_Pilot.xlsx
+output.sql
 
 # Cython debug symbols
 cython_debug/
