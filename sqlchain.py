@@ -142,7 +142,7 @@ st.set_page_config(page_title="fontera_ai", page_icon=":speech_balloon:")
 # st.image("download.jpeg", width=200) 
 
 # st.title("Fonterra Assistant!🤖")
-st.markdown("<h1 style='text-align: center; color: white;'>Fonterra Assistant!🤖</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: left; color: white; margin-left: 15px; '>Fonterra Assistant!🤖</h1>", unsafe_allow_html=True)
 
 st.session_state.db = db
 st.markdown("""
