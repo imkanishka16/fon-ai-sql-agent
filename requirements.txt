@@ -124,3 +124,8 @@
 
 
 python-dotenv
+langchain
+langchain-community
+langchain-core
+langchain-openai
+langchain-text-splitters
