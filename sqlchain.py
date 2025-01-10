@@ -375,18 +375,23 @@ def get_chatbot_response_with_history(user_message: str, chat_history: list):
             function_name = response.function_call.name
             function_args = json.loads(response.function_call.arguments)
             
+            print(f"Called function: {function_name}")
+            print(f"Function arguments: {function_args}")
+            
             if function_name == "execute_sql_query":
                 result = execute_sql_query(function_args["user_query"], db)
-                return str(result['content'])  # Ensure string return
+                print(f"SQL result type: {type(result)}")
+                return str(result)
             elif function_name == "retrieve_from_document":
                 result = retrieve_from_document(function_args["user_query"])
-                return str(result['content'])  # Ensure string return
+                print(f"Document result type: {type(result)}")
+                return str(result)
                 
             return "I couldn't process your query. Please try again."
-        else:
-            return str(response.content)  # Ensure string return
     except Exception as e:
-        print(f"Error in get_chatbot_response_with_history: {str(e)}")
+        print(f"Error stack trace:")
+        import traceback
+        print(traceback.format_exc())
         return f"An error occurred: {str(e)}"
 ##########################endfunctioncalling#################
 
