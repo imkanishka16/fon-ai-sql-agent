@@ -84,7 +84,8 @@ retriever = ChromaDBRetriever()
 
 llm = ChatOpenAI(api_key=OPENAI_API_KEY, temperature=0, model="gpt-4o")
 
-def rag_response(question: str) -> str:  # Explicitly return a string
+def rag_response(question: str) -> dict:
+    
     template = """You are an assistant for question-answering tasks. 
     Use the following context to answer the question. If you don't know the answer, just say that you don't know.
 
@@ -95,6 +96,7 @@ def rag_response(question: str) -> str:  # Explicitly return a string
      - What are the National level scores of each KPI?
      - What are 4 KPIs that are considered in perfect store classification?
      - What is perfect store?
+     - 
 
     Provide a clear and direct answer without any JSON formatting or special characters.
     """
@@ -113,17 +115,13 @@ def rag_response(question: str) -> str:  # Explicitly return a string
 
     try:
         raw_result = qa_chain.invoke({"query": question})
-        # Get just the answer text and ensure it's a string
+        # Get just the answer text and wrap it in the desired format
         answer_text = raw_result.get('result', '').strip()
-        
-        # Ensure the response is a string
-        if not isinstance(answer_text, str):
-            answer_text = str(answer_text)
-        
         return answer_text
+        # return {"text_answer": answer_text}
     except Exception as e:
         print(f"Error during chain execution: {str(e)}")
-        return "An error occurred while processing your question."
+        return {"text_answer": "An error occurred while processing your question."}
 #End RAG part
 ############################################################################################################
 
@@ -254,19 +252,12 @@ def execute_sql_query(user_query: str, db):
 def retrieve_from_document(user_query: str):
     """Retrieve definitional, conceptual, and contextual information from documents."""
     response = rag_response(user_query)
-    
-    # Debugging: Log the type and content of the response
-    print(f"Type of response from rag_response: {type(response)}")
-    print(f"Content of response from rag_response: {response}")
-    
-    # Ensure the response is a string
-    if not isinstance(response, str):
-        response = str(response)
-    
-    return {
-        'content': response,  # Ensure response is a string
-    }
-    
+    # Get the current UTC timestamp
+    if response:
+        return {
+            'content':response,
+        }
+    # return response
 
 
 # Function
@@ -318,8 +309,8 @@ def get_chatbot_response_with_history(user_message: str, chat_history: list):
         {
             "role": "system",
             "content": """You are a specialized assistant for Perfect Store analysis. For queries, follow these instructions:
-            - For numerical data, statistics, performance metrics, or store-related analytics (e.g., store visited information, store assign information): use the function execute_sql_query.
-            - For definitions, concepts, methodologies, or classifications related to Perfect Store (e.g., what is MCL compliance, KPIs, or Perfect Store criteria, National level scores): use the function retrieve_from_document.
+            - For numerical data, statistics, performance metrics, or store-related analytics (e.g., store visited information, store assign information): use the function `execute_sql_query`.
+            - For definitions, concepts, methodologies, or classifications related to Perfect Store (e.g., what is MCL compliance, KPIs, or Perfect Store criteria, National level scores): use the function `retrieve_from_document`.
             - Always use one of these functions—do not answer directly.
             - For follow-up questions, use the context from previous messages to understand what the user is asking.
             - If the question cannot be answered using the database or document, respond with 'I'm unable to find the required information.'."""
@@ -329,44 +320,37 @@ def get_chatbot_response_with_history(user_message: str, chat_history: list):
     # Add chat history
     for msg in chat_history:
         if isinstance(msg, (AIMessage, HumanMessage)):
-            content = msg.content
-            if not isinstance(content, str):
-                content = str(content)  # Ensure content is a string
             messages.append({
                 "role": "user" if isinstance(msg, HumanMessage) else "assistant",
-                "content": content
+                "content": msg.content
             })
     
     # Add current message
     messages.append({"role": "user", "content": user_message})
 
-    try:
-        completion = client.chat.completions.create(
-            model="gpt-4-0613",
-            messages=messages,
-            functions=functions,
-            function_call="auto"
-        )
+    completion = client.chat.completions.create(
+        model="gpt-4-0613",
+        messages=messages,
+        functions=functions,
+        function_call="auto"
+    )
 
-        response = completion.choices[0].message
+    response = completion.choices[0].message
 
-        if response.function_call:
-            function_name = response.function_call.name
-            function_args = json.loads(response.function_call.arguments)
+    if response.function_call:
+        function_name = response.function_call.name
+        function_args = json.loads(response.function_call.arguments)
+        
+        if function_name == "execute_sql_query":
+            result = execute_sql_query(function_args["user_query"], db)
+            return result['content']  # Return just the content string
+        elif function_name == "retrieve_from_document":
+            result = retrieve_from_document(function_args["user_query"])
+            return result['content']  # Return just the content string
             
-            if function_name == "execute_sql_query":
-                result = execute_sql_query(function_args["user_query"], db)
-                return result['content']  # Return just the content string
-            elif function_name == "retrieve_from_document":
-                result = retrieve_from_document(function_args["user_query"])
-                return result['content']  # Return just the content string
-                
-            return "I couldn't process your query. Please try again."
-        else:
-            return response.content
-    except Exception as e:
-        print(f"Error in OpenAI API call: {str(e)}")
-        return f"An error occurred: {str(e)}"
+        return "I couldn't process your query. Please try again."
+    else:
+        return response.content
 ##########################endfunctioncalling#################
 
 
