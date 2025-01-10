@@ -259,6 +259,11 @@ def retrieve_from_document(user_query: str):
         }
     # return response
 
+# def retrieve_from_document(query):
+#     results = retriever.get_relevant_documents(query)
+#     # Combine all retrieved document content into a single string
+#     return "\n".join([doc.page_content for doc in results])
+
 
 # Function
 functions = [
