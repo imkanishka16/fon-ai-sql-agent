@@ -54,7 +54,6 @@ langchain-community==0.3.1
 langchain-core==0.3.28
 langchain-openai==0.2.14
 langchain-text-splitters==0.3.0
-langsmith==0.1.129
 load-dotenv==0.1.0
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
