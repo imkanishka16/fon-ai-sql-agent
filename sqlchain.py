@@ -314,8 +314,8 @@ def get_chatbot_response_with_history(user_message: str, chat_history: list):
         {
             "role": "system",
             "content": """You are a specialized assistant for Perfect Store analysis. For queries, follow these instructions:
-            - For numerical data, statistics, performance metrics, or store-related analytics (e.g., store visited information, store assign information): use the function `execute_sql_query`.
-            - For definitions, concepts, methodologies, or classifications related to Perfect Store (e.g., what is MCL compliance, KPIs, or Perfect Store criteria, National level scores): use the function `retrieve_from_document`.
+            - For numerical data, statistics, performance metrics, or store-related analytics (e.g., store visited information, store assign information): use the function execute_sql_query.
+            - For definitions, concepts, methodologies, or classifications related to Perfect Store (e.g., what is MCL compliance, KPIs, or Perfect Store criteria, National level scores): use the function retrieve_from_document.
             - Always use one of these functions—do not answer directly.
             - For follow-up questions, use the context from previous messages to understand what the user is asking.
             - If the question cannot be answered using the database or document, respond with 'I'm unable to find the required information.'."""
@@ -327,35 +327,39 @@ def get_chatbot_response_with_history(user_message: str, chat_history: list):
         if isinstance(msg, (AIMessage, HumanMessage)):
             messages.append({
                 "role": "user" if isinstance(msg, HumanMessage) else "assistant",
-                "content": msg.content
+                "content": str(msg.content)  # Ensure content is string
             })
     
     # Add current message
     messages.append({"role": "user", "content": user_message})
 
-    completion = client.chat.completions.create(
-        model="gpt-4-0613",
-        messages=messages,
-        functions=functions,
-        function_call="auto"
-    )
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4-0613",
+            messages=messages,
+            functions=functions,
+            function_call="auto"
+        )
 
-    response = completion.choices[0].message
+        response = completion.choices[0].message
 
-    if response.function_call:
-        function_name = response.function_call.name
-        function_args = json.loads(response.function_call.arguments)
-        
-        if function_name == "execute_sql_query":
-            result = execute_sql_query(function_args["user_query"], db)
-            return result['content']  # Return just the content string
-        elif function_name == "retrieve_from_document":
-            result = retrieve_from_document(function_args["user_query"])
-            return result['content']  # Return just the content string
+        if response.function_call:
+            function_name = response.function_call.name
+            function_args = json.loads(response.function_call.arguments)
             
-        return "I couldn't process your query. Please try again."
-    else:
-        return response.content
+            if function_name == "execute_sql_query":
+                result = execute_sql_query(function_args["user_query"], db)
+                return str(result['content'])  # Ensure string return
+            elif function_name == "retrieve_from_document":
+                result = retrieve_from_document(function_args["user_query"])
+                return str(result['content'])  # Ensure string return
+                
+            return "I couldn't process your query. Please try again."
+        else:
+            return str(response.content)  # Ensure string return
+    except Exception as e:
+        print(f"Error in get_chatbot_response_with_history: {str(e)}")
+        return f"An error occurred: {str(e)}"
 ##########################endfunctioncalling#################
 
 
@@ -492,31 +496,31 @@ def main():
     user_query = st.chat_input("Type a message...")
     
     if user_query and user_query.strip():
-        # Add user message to chat history
         st.session_state.chat_history.append(HumanMessage(content=user_query))
         with st.chat_message("user"):
             st.markdown(f"<span style='color: white;'>{user_query}</span>", unsafe_allow_html=True)
         
         try:
-            # Get chatbot response
             response_text = get_chatbot_response_with_history(user_query, st.session_state.chat_history)
             
-            # Add AI response to chat history
+            # Ensure response_text is a string
+            if response_text is not None:
+                response_text = str(response_text)
+            else:
+                response_text = "No response received"
+            
+            # Create AI message with string content
             ai_message = AIMessage(content=response_text)
             st.session_state.chat_history.append(ai_message)
             
-            # Display AI response
             with st.chat_message("assistant"):
                 st.markdown(f"<span style='color: white;'>{response_text}</span>", unsafe_allow_html=True)
                 
         except Exception as e:
-            # Handle any errors that occur during response generation
             error_message = f"An error occurred: {str(e)}"
             st.session_state.chat_history.append(AIMessage(content=error_message))
             with st.chat_message("assistant"):
                 st.markdown(f"<span style='color: white;'>{error_message}</span>", unsafe_allow_html=True)
-            
-            # Log the error for debugging
             print(f"Error in chat response: {str(e)}")
 
 if __name__ == "__main__":
