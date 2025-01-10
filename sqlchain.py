@@ -84,8 +84,7 @@ retriever = ChromaDBRetriever()
 
 llm = ChatOpenAI(api_key=OPENAI_API_KEY, temperature=0, model="gpt-4o")
 
-def rag_response(question: str) -> dict:
-    
+def rag_response(question: str) -> str:
     template = """You are an assistant for question-answering tasks. 
     Use the following context to answer the question. If you don't know the answer, just say that you don't know.
 
@@ -96,7 +95,6 @@ def rag_response(question: str) -> dict:
      - What are the National level scores of each KPI?
      - What are 4 KPIs that are considered in perfect store classification?
      - What is perfect store?
-     - 
 
     Provide a clear and direct answer without any JSON formatting or special characters.
     """
@@ -115,13 +113,15 @@ def rag_response(question: str) -> dict:
 
     try:
         raw_result = qa_chain.invoke({"query": question})
-        # Get just the answer text and wrap it in the desired format
+        # Get just the answer text
         answer_text = raw_result.get('result', '').strip()
+        if not answer_text:
+            return "I'm sorry, I couldn't find a relevant answer to your question."
         return answer_text
-        # return {"text_answer": answer_text}
     except Exception as e:
         print(f"Error during chain execution: {str(e)}")
-        return {"text_answer": "An error occurred while processing your question."}
+        return "I apologize, but I encountered an error while processing your question. Please try asking in a different way."
+
 #End RAG part
 ############################################################################################################
 
@@ -249,15 +249,28 @@ def execute_sql_query(user_query: str, db):
         }
 
 
-def retrieve_from_document(user_query: str):
+# def retrieve_from_document(user_query: str):
+#     """Retrieve definitional, conceptual, and contextual information from documents."""
+#     response = rag_response(user_query)
+#     # Get the current UTC timestamp
+#     if response:
+#         return {
+#             'content':response,
+#         }
+#     # return response
+
+def retrieve_from_document(user_query: str) -> str:
     """Retrieve definitional, conceptual, and contextual information from documents."""
-    response = rag_response(user_query)
-    # Get the current UTC timestamp
-    if response:
-        return {
-            'content':response,
-        }
-    # return response
+    print(f"Starting document retrieval for query: {user_query}")
+    try:
+        response = rag_response(user_query)
+        print(f"RAG response received: {response}")
+        return response if response else "I'm sorry, I couldn't find a relevant answer to your question."
+    except Exception as e:
+        print(f"Error in retrieve_from_document: {str(e)}")
+        return "I encountered an error while searching the documents. Please try again."
+
+
 
 # def retrieve_from_document(query):
 #     results = retriever.get_relevant_documents(query)
