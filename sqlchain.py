@@ -304,7 +304,6 @@ functions = [
     },
 ]
 
-
 def get_chatbot_response_with_history(user_message: str, chat_history: list):
     """Modified main function to handle user queries with chat history."""
     client = OpenAI(api_key=OPENAI_API_KEY)
@@ -324,11 +323,10 @@ def get_chatbot_response_with_history(user_message: str, chat_history: list):
     
     # Add chat history
     for msg in chat_history:
-        if isinstance(msg, (AIMessage, HumanMessage)):
-            messages.append({
-                "role": "user" if isinstance(msg, HumanMessage) else "assistant",
-                "content": msg.content
-            })
+        messages.append({
+            "role": "user" if msg["role"] == "user" else "assistant",
+            "content": msg["content"] if msg["role"] == "user" else str(msg["content"])
+        })
     
     # Add current message
     messages.append({"role": "user", "content": user_message})
@@ -348,14 +346,65 @@ def get_chatbot_response_with_history(user_message: str, chat_history: list):
         
         if function_name == "execute_sql_query":
             result = execute_sql_query(function_args["user_query"], db)
-            return result['content']  # Return just the content string
         elif function_name == "retrieve_from_document":
             result = retrieve_from_document(function_args["user_query"])
-            return result['content']  # Return just the content string
             
-        return "I couldn't process your query. Please try again."
+        return result
     else:
-        return response.content
+        return {"error": "No function was called"}
+
+
+# def get_chatbot_response_with_history(user_message: str, chat_history: list):
+#     """Modified main function to handle user queries with chat history."""
+#     client = OpenAI(api_key=OPENAI_API_KEY)
+    
+#     # Convert chat history to the format OpenAI expects
+#     messages = [
+#         {
+#             "role": "system",
+#             "content": """You are a specialized assistant for Perfect Store analysis. For queries, follow these instructions:
+#             - For numerical data, statistics, performance metrics, or store-related analytics (e.g., store visited information, store assign information): use the function `execute_sql_query`.
+#             - For definitions, concepts, methodologies, or classifications related to Perfect Store (e.g., what is MCL compliance, KPIs, or Perfect Store criteria, National level scores): use the function `retrieve_from_document`.
+#             - Always use one of these functions—do not answer directly.
+#             - For follow-up questions, use the context from previous messages to understand what the user is asking.
+#             - If the question cannot be answered using the database or document, respond with 'I'm unable to find the required information.'."""
+#         }
+#     ]
+    
+#     # Add chat history
+#     for msg in chat_history:
+#         if isinstance(msg, (AIMessage, HumanMessage)):
+#             messages.append({
+#                 "role": "user" if isinstance(msg, HumanMessage) else "assistant",
+#                 "content": msg.content
+#             })
+    
+#     # Add current message
+#     messages.append({"role": "user", "content": user_message})
+
+#     completion = client.chat.completions.create(
+#         model="gpt-4-0613",
+#         messages=messages,
+#         functions=functions,
+#         function_call="auto"
+#     )
+
+#     response = completion.choices[0].message
+
+#     if response.function_call:
+#         function_name = response.function_call.name
+#         function_args = json.loads(response.function_call.arguments)
+        
+#         if function_name == "execute_sql_query":
+#             result = execute_sql_query(function_args["user_query"], db)
+#             return result['content']  # Return just the content string
+#         elif function_name == "retrieve_from_document":
+#             result = retrieve_from_document(function_args["user_query"])
+#             return result['content']  # Return just the content string
+            
+#         return "I couldn't process your query. Please try again."
+#     else:
+#         return response.content
 ##########################endfunctioncalling#################
 
 
