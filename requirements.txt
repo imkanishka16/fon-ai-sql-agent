@@ -130,3 +130,4 @@ langchain-core
 langchain-openai
 langchain-text-splitters
 chromadb==0.4.1
+PyMySQL
