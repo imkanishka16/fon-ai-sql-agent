@@ -62,6 +62,23 @@ chroma_client = chromadb.HttpClient(host='3.110.90.22', port=8000)
 chroma_collection = chroma_client.get_collection("fonterra")
 
 
+# class ChromaDBRetriever(BaseRetriever, BaseModel):
+#     """Custom retriever for ChromaDB that properly implements Pydantic BaseModel"""
+#     _collection: any = PrivateAttr()
+#     top_k: int = 3
+
+#     def __init__(self, **data):
+#         super().__init__(**data)
+#         self._collection = chroma_collection
+
+#     def _get_relevant_documents(self, query: str) -> List[Document]:
+#         results = self._collection.query(
+#             query_texts=[query],
+#             n_results=self.top_k
+#         )
+#         return [Document(page_content=doc) for doc in results['documents'][0]]
+
+
 class ChromaDBRetriever(BaseRetriever, BaseModel):
     """Custom retriever for ChromaDB that properly implements Pydantic BaseModel"""
     _collection: any = PrivateAttr()
@@ -69,14 +86,37 @@ class ChromaDBRetriever(BaseRetriever, BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self._collection = chroma_collection
+        try:
+            self._collection = chroma_client.get_collection("fonterra")
+            print("Successfully connected to ChromaDB collection")
+        except Exception as e:
+            print(f"Error connecting to ChromaDB collection: {str(e)}")
+            raise
 
     def _get_relevant_documents(self, query: str) -> List[Document]:
-        results = self._collection.query(
-            query_texts=[query],
-            n_results=self.top_k
-        )
-        return [Document(page_content=doc) for doc in results['documents'][0]]
+        try:
+            print(f"Querying ChromaDB with: {query}")
+            results = self._collection.query(
+                query_texts=[query],
+                n_results=self.top_k
+            )
+            print(f"Raw ChromaDB results: {results}")
+            
+            if not results or 'documents' not in results:
+                print("No documents found in ChromaDB results")
+                return [Document(page_content="No relevant information found.")]
+            
+            documents = results['documents'][0]
+            print(f"Found {len(documents)} documents")
+            
+            return [Document(page_content=doc) for doc in documents]
+            
+        except Exception as e:
+            print(f"Error in ChromaDB retrieval: {str(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+            return [Document(page_content="Error retrieving information from the database.")]
+
 
 # Initialize the retriever
 retriever = ChromaDBRetriever()
@@ -85,6 +125,8 @@ retriever = ChromaDBRetriever()
 llm = ChatOpenAI(api_key=OPENAI_API_KEY, temperature=0, model="gpt-4o")
 
 def rag_response(question: str) -> str:
+    print(f"Starting RAG response for question: {question}")
+    
     template = """You are an assistant for question-answering tasks. 
     Use the following context to answer the question. If you don't know the answer, just say that you don't know.
 
@@ -101,42 +143,41 @@ def rag_response(question: str) -> str:
 
     prompt = ChatPromptTemplate.from_template(template)
 
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=retriever,
-        return_source_documents=False,
-        chain_type_kwargs={
-            "prompt": prompt,
-        }
-    )
-
     try:
+        qa_chain = RetrievalQA.from_chain_type(
+            llm=llm,
+            chain_type="stuff",
+            retriever=retriever,
+            return_source_documents=False,
+            chain_type_kwargs={
+                "prompt": prompt,
+            }
+        )
+        print("Successfully created QA chain")
+
         result = qa_chain.invoke({"query": question})
-        # The result is returned directly as a string in newer versions of LangChain
+        print(f"QA chain result type: {type(result)}")
+        print(f"QA chain result: {result}")
+
+        # Handle different result types
         if isinstance(result, str):
-            return result
-        # If result is a dict, get the answer from the appropriate key
+            return result.strip()
         elif isinstance(result, dict):
-            # Try different possible keys that might contain the answer
             if 'result' in result:
-                return result['result']
+                return result['result'].strip()
             elif 'answer' in result:
-                return result['answer']
-            elif 'output' in result:
-                return result['output']
+                return result['answer'].strip()
             else:
-                # If we can't find the answer in any expected key, return the full result as string
+                print(f"Unexpected result structure. Keys: {result.keys()}")
                 return str(result)
         else:
-            # For any other type, convert to string
             return str(result)
-    except Exception as e:
-        print(f"Error during chain execution: {str(e)}")
-        print(f"Result type: {type(result)}")
-        print(f"Result content: {result}")
-        return "I apologize, but I encountered an error while processing your question. Please try asking in a different way."
 
+    except Exception as e:
+        print(f"Error in rag_response: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return "An error occurred while processing your question."
 #End RAG part
 ############################################################################################################
 
@@ -277,15 +318,26 @@ def execute_sql_query(user_query: str, db):
 def retrieve_from_document(user_query: str) -> str:
     """Retrieve definitional, conceptual, and contextual information from documents."""
     print(f"Starting document retrieval for query: {user_query}")
+    
     try:
+        # Check if ChromaDB collection is accessible
+        if not chroma_collection:
+            print("ChromaDB collection is not accessible")
+            return "The document database is currently unavailable. Please try again later."
+
         response = rag_response(user_query)
-        print(f"RAG response type: {type(response)}")
-        print(f"RAG response content: {response}")
-        return str(response)
+        print(f"RAG response received: {response}")
+        
+        if not response or response.strip() == "":
+            return "I couldn't find a relevant answer to your question."
+            
+        return response
+
     except Exception as e:
         print(f"Error in retrieve_from_document: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         return "I encountered an error while searching the documents. Please try again."
-
 
 # def retrieve_from_document(query):
 #     results = retriever.get_relevant_documents(query)
