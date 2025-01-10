@@ -129,3 +129,4 @@ langchain-community
 langchain-core
 langchain-openai
 langchain-text-splitters
+chromadb
