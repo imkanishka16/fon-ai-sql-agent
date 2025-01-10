@@ -44,6 +44,9 @@ from sqlalchemy import Column, Integer, Text, DateTime
 import json
 from openai import OpenAI
 from datetime import datetime
+__import__('pysqlite3') 
+import sys 
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 
 # Load OpenAI API key
