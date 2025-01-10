@@ -112,14 +112,29 @@ def rag_response(question: str) -> str:
     )
 
     try:
-        raw_result = qa_chain.invoke({"query": question})
-        # Get just the answer text
-        answer_text = raw_result.get('result', '').strip()
-        if not answer_text:
-            return "I'm sorry, I couldn't find a relevant answer to your question."
-        return answer_text
+        result = qa_chain.invoke({"query": question})
+        # The result is returned directly as a string in newer versions of LangChain
+        if isinstance(result, str):
+            return result
+        # If result is a dict, get the answer from the appropriate key
+        elif isinstance(result, dict):
+            # Try different possible keys that might contain the answer
+            if 'result' in result:
+                return result['result']
+            elif 'answer' in result:
+                return result['answer']
+            elif 'output' in result:
+                return result['output']
+            else:
+                # If we can't find the answer in any expected key, return the full result as string
+                return str(result)
+        else:
+            # For any other type, convert to string
+            return str(result)
     except Exception as e:
         print(f"Error during chain execution: {str(e)}")
+        print(f"Result type: {type(result)}")
+        print(f"Result content: {result}")
         return "I apologize, but I encountered an error while processing your question. Please try asking in a different way."
 
 #End RAG part
@@ -264,12 +279,12 @@ def retrieve_from_document(user_query: str) -> str:
     print(f"Starting document retrieval for query: {user_query}")
     try:
         response = rag_response(user_query)
-        print(f"RAG response received: {response}")
-        return response if response else "I'm sorry, I couldn't find a relevant answer to your question."
+        print(f"RAG response type: {type(response)}")
+        print(f"RAG response content: {response}")
+        return str(response)
     except Exception as e:
         print(f"Error in retrieve_from_document: {str(e)}")
         return "I encountered an error while searching the documents. Please try again."
-
 
 
 # def retrieve_from_document(query):
